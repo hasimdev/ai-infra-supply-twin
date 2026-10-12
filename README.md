@@ -1,12 +1,14 @@
 # AI Infra Supply Twin
 
+[![CI](https://github.com/hasimdev/ai-infra-supply-twin/actions/workflows/ci.yml/badge.svg)](https://github.com/hasimdev/ai-infra-supply-twin/actions/workflows/ci.yml)
+
 **Where does the AI hardware supply chain break, and what does it cost?**
 
 This is a risk model of the chain behind GPU clusters: foundry, HBM, advanced packaging,
 substrates, rack integrators, optics, switching and grid power. It runs millions of
 disruption scenarios on a GPU and uses Claude to turn news headlines into risk updates.
 
-<!-- Add a screenshot: docs/dashboard.png -->
+![Dashboard: network risk map, disruption feed and ranked exposure](docs/dashboard.png)
 
 ```
 news headlines ──► Claude (structured output) ──► per-node risk updates
