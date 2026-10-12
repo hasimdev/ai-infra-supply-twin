@@ -1,0 +1,9 @@
+[project]
+name = "ai-infra-supply-twin"
+version = "0.1.0"
+description = "GPU Monte Carlo + LLM disruption feed for the AI hardware supply chain"
+requires-python = ">=3.10"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]

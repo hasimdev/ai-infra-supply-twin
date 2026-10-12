@@ -1,0 +1,17 @@
+{
+  "_comment": "Hand-written example of the SignalReport that feed.py expects from Claude. Used by offline mode so the pipeline runs without an API key. Run `python run.py --live` to replace it with a real extraction.",
+  "signals": [
+    {"headline_index": 0, "relevant": true, "node_id": "K1", "risk_multiplier": 3.0, "ttr_days": [14, 18, 25], "confidence": 0.9,
+     "rationale": "Packaging lines in Taiwan shut by typhoon; operators cite 2-3 weeks to requalify."},
+    {"headline_index": 1, "relevant": true, "node_id": "O1", "risk_multiplier": 2.5, "ttr_days": null, "confidence": 0.8,
+     "rationale": "Export licence review directly delays optical modules from Chinese makers."},
+    {"headline_index": 2, "relevant": true, "node_id": "H1", "risk_multiplier": 2.0, "ttr_days": [30, 60, 90], "confidence": 0.65,
+     "rationale": "A Korean HBM maker has a yield excursion with one quarter of allocation cuts; which of the two Korean makers is ambiguous."},
+    {"headline_index": 3, "relevant": true, "node_id": "T1", "risk_multiplier": 1.5, "ttr_days": [90, 180, 540], "confidence": 0.85,
+     "rationale": "Transformer lead times in ERCOT now exceed 18 months, so replacing a failed unit takes far longer."},
+    {"headline_index": 4, "relevant": false, "node_id": null, "risk_multiplier": 1.0, "ttr_days": null, "confidence": 0.99,
+     "rationale": "Retail news with no bearing on the network."},
+    {"headline_index": 5, "relevant": true, "node_id": "M2", "risk_multiplier": 0.7, "ttr_days": null, "confidence": 0.7,
+     "rationale": "A second liquid-cooled line at the Mexican integrator adds redundancy."}
+  ]
+}

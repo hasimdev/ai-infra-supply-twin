@@ -1,0 +1,14 @@
+[
+  {"date": "2026-09-01", "headline": "Earthquake halts wafer starts at a leading-edge logic fab in Taiwan; restart expected within a month.", "expect_node": "F1", "expect_direction": "up"},
+  {"date": "2026-09-02", "headline": "Japanese substrate maker reports fire at its ABF film plant.", "expect_node": "B1", "expect_direction": "up"},
+  {"date": "2026-09-03", "headline": "Second Korean HBM supplier qualifies an additional production line, raising output 20%.", "expect_node": "H2", "expect_direction": "down"},
+  {"date": "2026-09-04", "headline": "Port strike in Kaohsiung delays outbound shipments of packaged accelerators.", "expect_node": "K1", "expect_direction": "up"},
+  {"date": "2026-09-05", "headline": "New tariffs announced on optical transceivers imported from China.", "expect_node": "O1", "expect_direction": "up"},
+  {"date": "2026-09-06", "headline": "Texas grid operator approves fast-track interconnection for large loads, citing new transformer inventory.", "expect_node": "T1", "expect_direction": "down"},
+  {"date": "2026-09-07", "headline": "Liquid-cooling vendor in Taiwan recalls coolant distribution units over a pump defect.", "expect_node": "C1", "expect_direction": "up"},
+  {"date": "2026-09-08", "headline": "Switch silicon supplier warns of a 6-week slip on its next-generation NIC.", "expect_node": "N1", "expect_direction": "up"},
+  {"date": "2026-09-09", "headline": "Labour dispute idles a server assembly plant near Guadalajara.", "expect_node": "M2", "expect_direction": "up"},
+  {"date": "2026-09-10", "headline": "Smartphone shipments rise 4% year on year.", "expect_node": null, "expect_direction": "none"},
+  {"date": "2026-09-11", "headline": "Football club announces new stadium sponsor.", "expect_node": null, "expect_direction": "none"},
+  {"date": "2026-09-12", "headline": "Netherlands data-centre site loses grid connection for three days after substation flood.", "expect_node": "D3", "expect_direction": "up"}
+]

@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Infra Supply Twin</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --panel: #ffffff; --text: #1a1d23; --muted: #5f6673; --line: #dfe3ea;
+    --critical: #d1453b; --watch: #c98a12; --ok: #2f8f5b; --accent: #3a5bd9; --before: #b9c0cc;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #12151b; --panel: #1b1f27; --text: #e8ebf0; --muted: #9aa3b2; --line: #2c323d;
+      --critical: #f0675d; --watch: #e5a93a; --ok: #4fbf82; --accent: #7d97ff; --before: #4a5260;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 1200px; margin: 0 auto; padding: 24px 16px 48px; }
+  header { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 16px; }
+  h1 { margin: 0; font-size: 22px; }
+  .sub { color: var(--muted); margin-top: 2px; }
+  .controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  select, button { font: inherit; padding: 7px 12px; border-radius: 8px; border: 1px solid var(--line);
+                   background: var(--panel); color: var(--text); }
+  button { background: var(--accent); color: #fff; border: none; cursor: pointer; font-weight: 600; }
+  button:disabled { opacity: .6; cursor: wait; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 20px 0; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+  .kpi .label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+  .kpi .value { font-size: 24px; font-weight: 700; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .kpi .delta { font-size: 12px; color: var(--muted); }
+  .grid { display: grid; grid-template-columns: 2fr 1fr; gap: 12px; }
+  @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+  h2 { font-size: 15px; margin: 0 0 10px; }
+  svg { width: 100%; height: auto; display: block; }
+  .legend { display: flex; gap: 14px; color: var(--muted); font-size: 12px; margin-top: 6px; flex-wrap: wrap; }
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
+  .signal { border-top: 1px solid var(--line); padding: 10px 0; }
+  .signal:first-of-type { border-top: none; padding-top: 0; }
+  .signal b { font-weight: 600; }
+  .signal .why { color: var(--muted); font-size: 13px; }
+  .tag { font-size: 11px; padding: 1px 7px; border-radius: 99px; border: 1px solid var(--line); color: var(--muted); }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  th { color: var(--muted); font-weight: 500; font-size: 12px; }
+  td.num, th.num { text-align: right; }
+  .bars { position: relative; width: 160px; height: 14px; }
+  .bars span { position: absolute; left: 0; height: 6px; border-radius: 3px; }
+  .bars .b { top: 0; background: var(--before); }
+  .bars .a { top: 8px; background: var(--accent); }
+  .flag { font-weight: 600; font-size: 12px; }
+  .rec { border-top: 1px solid var(--line); padding: 10px 0; }
+  .rec:first-of-type { border-top: none; }
+  .tip { position: fixed; pointer-events: none; background: var(--panel); border: 1px solid var(--line);
+         border-radius: 8px; padding: 8px 10px; font-size: 12px; box-shadow: 0 4px 16px rgba(0,0,0,.15); display: none; }
+  .err { color: var(--critical); }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div>
+      <h1>AI Infra Supply Twin</h1>
+      <div class="sub">Where the AI hardware supply chain breaks, and what it costs. GPU Monte Carlo with an LLM news feed.</div>
+    </div>
+    <div class="controls">
+      <select id="runs" aria-label="Monte Carlo runs per node">
+        <option value="20000">20k runs/node</option>
+        <option value="100000" selected>100k runs/node</option>
+        <option value="500000">500k runs/node</option>
+      </select>
+      <select id="feed" aria-label="Feed source">
+        <option value="offline">Sample feed</option>
+        <option value="live">Live Claude feed</option>
+      </select>
+      <button id="go">Run analysis</button>
+    </div>
+  </header>
+
+  <section class="kpis" id="kpis"></section>
+
+  <section class="grid">
+    <div class="card">
+      <h2>Network risk map <span class="tag">size = expected annual loss</span></h2>
+      <svg id="graph" viewBox="0 0 760 420" role="img" aria-label="Supply network graph"></svg>
+      <div class="legend">
+        <span><i class="dot" style="background:var(--critical)"></i>Critical: median recovery > buffer</span>
+        <span><i class="dot" style="background:var(--watch)"></i>Watch: P90 recovery > buffer</span>
+        <span><i class="dot" style="background:var(--ok)"></i>Covered</span>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Disruption feed</h2>
+      <div id="signals"></div>
+    </div>
+  </section>
+
+  <section class="card" style="margin-top:12px">
+    <h2>Ranked exposure</h2>
+    <div class="table-wrap"><table id="risks"></table></div>
+  </section>
+
+  <section class="card" style="margin-top:12px">
+    <h2>Buffer stock or fix the source?</h2>
+    <div id="recs"></div>
+  </section>
+</main>
+<div class="tip" id="tip"></div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const money = (x) => Math.abs(x) >= 1e6 ? `$${(x / 1e6).toFixed(1)}M` : `$${Math.round(x / 1e3)}k`;
+const flagColor = { critical: "var(--critical)", watch: "var(--watch)", ok: "var(--ok)" };
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+async function run() {
+  const btn = $("go");
+  btn.disabled = true; btn.textContent = "Simulating…";
+  try {
+    const res = await fetch("/analyze", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ runs: +$("runs").value, live: $("feed").value === "live" }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || res.statusText);
+    render(data);
+  } catch (e) {
+    $("kpis").innerHTML = `<div class="card err">Analysis failed: ${esc(e.message)}</div>`;
+  } finally {
+    btn.disabled = false; btn.textContent = "Run analysis";
+  }
+}
+
+function render(d) {
+  const delta = (d.total_eal - d.total_eal_before_news) / d.total_eal_before_news;
+  const critical = d.risks.filter((r) => r.flag === "critical").length;
+  const kpi = (label, value, sub) =>
+    `<div class="card kpi"><div class="label">${label}</div><div class="value">${value}</div><div class="delta">${sub}</div></div>`;
+  $("kpis").innerHTML =
+    kpi("Expected annual loss", money(d.total_eal), `${delta >= 0 ? "+" : ""}${(delta * 100).toFixed(0)}% vs before news`) +
+    kpi("GPUs delayed / year", Math.round(d.risks.reduce((s, r) => s + r.gpus_delayed_per_year, 0)).toLocaleString(), "expected, all nodes") +
+    kpi("Critical nodes", `${critical} / ${d.risks.length}`, "median recovery exceeds buffer") +
+    kpi("Scenarios simulated", `${(d.scenarios / 1e6).toFixed(1)}M`, `${d.seconds.toFixed(2)}s on ${esc(d.backend)}`);
+
+  renderGraph(d);
+
+  $("signals").innerHTML = d.signals.map((s) => `
+    <div class="signal">
+      <b>${esc(s.node_id)}</b> ${esc(s.node_name)} <span class="tag">conf ${s.confidence.toFixed(2)}</span><br>
+      <span>${esc(s.change)}</span>
+      <div class="why">${esc(s.rationale)}</div>
+    </div>`).join("") + `<div class="why" style="margin-top:8px">Source: ${esc(d.feed_source)}</div>`;
+
+  const maxEal = Math.max(...d.risks.map((r) => Math.max(r.eal, r.eal_before_news)));
+  $("risks").innerHTML = `
+    <tr><th>Node</th><th>Name</th><th class="num">TTS</th><th class="num">TTR p50</th><th class="num">TTR p90</th>
+        <th class="num">GPUs late/yr</th><th class="num">Exp. loss/yr</th><th>Before → after news</th><th>Flag</th></tr>` +
+    d.risks.map((r) => `
+    <tr><td>${esc(r.id)}</td><td>${esc(r.name)}</td><td class="num">${r.tts.toFixed(0)}d</td>
+        <td class="num">${r.ttr_p50.toFixed(0)}d</td><td class="num">${r.ttr_p90.toFixed(0)}d</td>
+        <td class="num">${Math.round(r.gpus_delayed_per_year).toLocaleString()}</td>
+        <td class="num">${money(r.eal)}</td>
+        <td><div class="bars" title="${money(r.eal_before_news)} → ${money(r.eal)}">
+          <span class="b" style="width:${(160 * r.eal_before_news / maxEal).toFixed(1)}px"></span>
+          <span class="a" style="width:${(160 * r.eal / maxEal).toFixed(1)}px"></span></div></td>
+        <td class="flag" style="color:${flagColor[r.flag]}">${r.flag}</td></tr>`).join("");
+
+  $("recs").innerHTML = d.recommendations.map((r) => {
+    const name = d.risks.find((x) => x.id === r.for)?.name ?? r.for;
+    if (r.roi === null) return `<div class="rec"><b>${esc(r.for)}</b> ${esc(name)}: ${esc(r.verdict)}</div>`;
+    const adds = Object.entries(r.extra_days).map(([dc, n]) => `+${n}d at ${dc}`).join(", ");
+    return `<div class="rec"><b>${esc(r.for)}</b> ${esc(name)}: ${adds}<br>
+      <span class="why">carry ${money(r.annual_cost)}/yr · avoids ${money(r.annual_benefit)}/yr ·
+      ROI ${r.roi.toFixed(2)}× → <b>${esc(r.verdict)}</b></span></div>`;
+  }).join("");
+}
+
+function renderGraph(d) {
+  const { nodes, edges } = d.network;
+  const risk = Object.fromEntries(d.risks.map((r) => [r.id, r]));
+  const kids = Object.fromEntries(nodes.map((n) => [n.id, []]));
+  edges.forEach((e) => kids[e.from].push(e.to));
+  // Column = distance from the sinks, so data centres sit on the right.
+  const height = {};
+  const h = (id) => height[id] ?? (height[id] = kids[id].length ? 1 + Math.max(...kids[id].map(h)) : 0);
+  nodes.forEach((n) => h(n.id));
+  const maxH = Math.max(...Object.values(height));
+  const cols = {};
+  nodes.forEach((n) => (cols[maxH - height[n.id]] ??= []).push(n));
+
+  const W = 760, H = 420, pos = {};
+  Object.entries(cols).forEach(([c, list]) => {
+    list.forEach((n, i) => {
+      pos[n.id] = { x: 70 + (+c) * ((W - 200) / maxH), y: (H / (list.length + 1)) * (i + 1) };
+    });
+  });
+  const maxEal = Math.max(...d.risks.map((r) => r.eal));
+  const radius = (id) => 6 + 22 * Math.sqrt(risk[id].eal / maxEal);
+
+  let svg = edges.map((e) => {
+    const a = pos[e.from], b = pos[e.to], mx = (a.x + b.x) / 2;
+    return `<path d="M${a.x},${a.y} C${mx},${a.y} ${mx},${b.y} ${b.x},${b.y}" fill="none"
+      stroke="var(--line)" stroke-width="${1 + 2 * (e.share ?? 1)}"/>`;
+  }).join("");
+  svg += nodes.map((n) => {
+    const p = pos[n.id], r = risk[n.id];
+    return `<g data-id="${esc(n.id)}" style="cursor:default">
+      <circle cx="${p.x}" cy="${p.y}" r="${radius(n.id)}" fill="${flagColor[r.flag]}" fill-opacity=".85"
+        stroke="var(--panel)" stroke-width="2"/>
+      <text x="${p.x}" y="${p.y + radius(n.id) + 13}" text-anchor="middle" font-size="11" fill="var(--muted)">${esc(n.id)}</text>
+    </g>`;
+  }).join("");
+  $("graph").innerHTML = svg;
+
+  const tip = $("tip");
+  $("graph").querySelectorAll("g[data-id]").forEach((g) => {
+    const r = risk[g.dataset.id];
+    g.addEventListener("mousemove", (ev) => {
+      tip.style.display = "block";
+      tip.style.left = Math.min(ev.clientX + 14, innerWidth - 260) + "px";
+      tip.style.top = ev.clientY + 14 + "px";
+      tip.innerHTML = `<b>${esc(r.name)}</b><br>Exp. loss ${money(r.eal)}/yr (was ${money(r.eal_before_news)})<br>
+        Buffer ${r.tts.toFixed(0)}d · recovery p50 ${r.ttr_p50.toFixed(0)}d · p90 ${r.ttr_p90.toFixed(0)}d<br>
+        Disruption odds ${(r.annual_prob * 100).toFixed(0)}%/yr`;
+    });
+    g.addEventListener("mouseleave", () => (tip.style.display = "none"));
+  });
+}
+
+$("go").addEventListener("click", run);
+run();
+</script>
+</body>
+</html>

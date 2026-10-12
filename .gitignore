@@ -1,0 +1,8 @@
+__pycache__/
+.pytest_cache/
+.venv/
+.env
+data/feed_live_output.json
+data/eval_live_output.json
+CAREER_KIT.md
+*.zip

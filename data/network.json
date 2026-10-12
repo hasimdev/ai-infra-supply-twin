@@ -1,0 +1,47 @@
+{
+  "_comment": "Illustrative AI-accelerator supply network. Suppliers are described by role and region, not named companies; probabilities and recovery times are placeholders to replace with your own estimates. Edge share = fraction of the child's supply that flows through that edge (1.0 on a critical bill-of-materials input). Site-level inputs (power, network) carry spares_days: staged GPUs cannot be installed without them, so only their own spares protect the site. Units are GPUs; unit_value is the cost of delaying one GPU's deployment (~30 days of rental at about $2/GPU-hour).",
+  "nodes": [
+    {"id": "F1", "name": "Leading-edge logic foundry (Taiwan)",     "type": "supplier", "ttr_days": [14, 30, 120], "annual_prob": 0.05},
+    {"id": "H1", "name": "HBM memory maker A (Korea)",              "type": "supplier", "ttr_days": [10, 25, 60],  "annual_prob": 0.08},
+    {"id": "H2", "name": "HBM memory maker B (Korea)",              "type": "supplier", "ttr_days": [10, 25, 60],  "annual_prob": 0.08},
+    {"id": "B1", "name": "ABF substrate supplier (Japan)",          "type": "supplier", "ttr_days": [7, 20, 45],   "annual_prob": 0.10},
+    {"id": "C1", "name": "Liquid-cooling CDU vendor (Taiwan)",      "type": "supplier", "ttr_days": [5, 14, 30],   "annual_prob": 0.12,
+     "alternate": {"name": "Second CDU vendor (US)", "capacity": 0.6, "ramp_days": 14}},
+    {"id": "O1", "name": "800G optical transceivers (China)",       "type": "supplier", "spares_days": 10, "ttr_days": [7, 21, 60],   "annual_prob": 0.15,
+     "alternate": {"name": "Transceiver maker (Thailand)", "capacity": 0.4, "ramp_days": 21}},
+    {"id": "N1", "name": "Switch ASIC + NIC supplier (US/Taiwan)",  "type": "supplier", "spares_days": 21, "ttr_days": [7, 14, 40],   "annual_prob": 0.06},
+    {"id": "T1", "name": "HV power transformer maker (Texas grid)", "type": "supplier", "spares_days": 0, "ttr_days": [30, 90, 240], "annual_prob": 0.10},
+
+    {"id": "K1", "name": "Advanced 2.5D packaging (Taiwan)",        "type": "plant", "cover_days": 5,  "ttr_days": [10, 21, 60], "annual_prob": 0.07},
+    {"id": "M1", "name": "Server/rack integrator (Taiwan)",         "type": "plant", "cover_days": 7,  "ttr_days": [5, 10, 30],  "annual_prob": 0.06},
+    {"id": "M2", "name": "Server/rack integrator (Mexico)",         "type": "plant", "cover_days": 5,  "ttr_days": [5, 10, 30],  "annual_prob": 0.06},
+
+    {"id": "D1", "name": "AI cluster build - Texas",       "type": "dc", "cover_days": 14, "daily_demand": 1200, "unit_value": 1440, "holding_cost_per_unit_year": 9000, "ttr_days": [3, 7, 21], "annual_prob": 0.05},
+    {"id": "D2", "name": "AI cluster build - Virginia",    "type": "dc", "cover_days": 12, "daily_demand": 900,  "unit_value": 1440, "holding_cost_per_unit_year": 9000, "ttr_days": [3, 7, 21], "annual_prob": 0.04},
+    {"id": "D3", "name": "AI cluster build - Netherlands", "type": "dc", "cover_days": 21, "daily_demand": 500,  "unit_value": 1440, "holding_cost_per_unit_year": 9500, "ttr_days": [3, 7, 21], "annual_prob": 0.04}
+  ],
+  "edges": [
+    {"from": "F1", "to": "K1"},
+    {"from": "B1", "to": "K1"},
+    {"from": "H1", "to": "K1", "share": 0.6},
+    {"from": "H2", "to": "K1", "share": 0.4},
+
+    {"from": "K1", "to": "M1"},
+    {"from": "K1", "to": "M2"},
+    {"from": "C1", "to": "M1"},
+    {"from": "C1", "to": "M2"},
+
+    {"from": "M1", "to": "D1", "share": 0.5},
+    {"from": "M2", "to": "D1", "share": 0.5},
+    {"from": "M2", "to": "D2"},
+    {"from": "M1", "to": "D3"},
+
+    {"from": "O1", "to": "D1"},
+    {"from": "O1", "to": "D2"},
+    {"from": "O1", "to": "D3"},
+    {"from": "N1", "to": "D1"},
+    {"from": "N1", "to": "D2"},
+    {"from": "N1", "to": "D3"},
+    {"from": "T1", "to": "D1"}
+  ]
+}
